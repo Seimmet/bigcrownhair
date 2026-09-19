@@ -1,0 +1,1 @@
+import User from '../models/User.js'; export async function list(req,res,next){try{const f={role:'customer'};if(req.query.q)f.$or=[{name:new RegExp(req.query.q,'i')},{email:new RegExp(req.query.q,'i')}];res.json(await User.find(f).select('-password').sort({createdAt:-1}))}catch(e){next(e)}}

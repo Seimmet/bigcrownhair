@@ -1,0 +1,1 @@
+import {Router} from 'express'; import {list,create} from '../controllers/review.controller.js'; import {protect} from '../middleware/auth.js'; const r=Router(); r.get('/:productId',list); r.post('/:productId',protect,create); export default r;

@@ -1,0 +1,1 @@
+import {Router} from 'express'; import {subscribe,list} from '../controllers/newsletter.controller.js'; import {protect,requireRoles} from '../middleware/auth.js'; const r=Router(); r.post('/subscribe',subscribe); r.get('/',protect,requireRoles('admin','superadmin'),list); export default r;

@@ -1,0 +1,1 @@
+import {Router} from 'express'; import {list} from '../controllers/customer.controller.js'; import {protect,requireRoles} from '../middleware/auth.js'; const r=Router(); r.get('/',protect,requireRoles('admin','superadmin'),list); export default r;

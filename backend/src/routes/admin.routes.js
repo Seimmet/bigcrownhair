@@ -1,0 +1,1 @@
+import {Router} from 'express'; import {dashboard,staff,createStaff} from '../controllers/admin.controller.js'; import {protect,requireRoles} from '../middleware/auth.js'; const r=Router(); r.use(protect,requireRoles('admin','superadmin')); r.get('/dashboard',dashboard); r.get('/staff',staff); r.post('/staff',requireRoles('superadmin'),createStaff); export default r;

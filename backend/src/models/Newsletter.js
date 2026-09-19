@@ -1,0 +1,1 @@
+import mongoose from 'mongoose'; const s=new mongoose.Schema({email:{type:String,unique:true,lowercase:true},subscribed:{type:Boolean,default:true}},{timestamps:true}); export default mongoose.model('Newsletter',s);

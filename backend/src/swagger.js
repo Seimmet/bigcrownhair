@@ -1,0 +1,78 @@
+export const swaggerSpec = {
+  openapi: '3.0.3',
+  info: {
+    title: 'BIGCROWN Hair API',
+    version: '1.0.0',
+    description: 'REST API for the BIGCROWN Hair ecommerce storefront and admin portal.',
+  },
+  servers: [{ url: 'http://localhost:5000', description: 'Local development' }],
+  tags: [
+    { name: 'Health' }, { name: 'Auth' }, { name: 'Products' }, { name: 'Categories' },
+    { name: 'Cart' }, { name: 'Orders' }, { name: 'Admin' }, { name: 'Customers' },
+    { name: 'Reviews' }, { name: 'Coupons' }, { name: 'Newsletter' },
+  ],
+  components: {
+    securitySchemes: {
+      bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      cookieAuth: { type: 'apiKey', in: 'cookie', name: 'bigcrown_token' },
+    },
+    schemas: {
+      Product: { type: 'object', properties: {
+        _id: { type: 'string' }, name: { type: 'string' }, slug: { type: 'string' },
+        description: { type: 'string' }, category: { type: 'string' }, tags: { type: 'array', items: { type: 'string' } },
+        imageKey: { type: 'string' }, images: { type: 'array', items: { type: 'string' } },
+        price: { type: 'number' }, compareAtPrice: { type: 'number' }, currency: { type: 'string', example: 'USD' },
+        stock: { type: 'integer' }, soldCount: { type: 'integer' }, reviewCount: { type: 'integer' }, rating: { type: 'number' },
+        featured: { type: 'boolean' }, bestSeller: { type: 'boolean' }, isActive: { type: 'boolean' },
+      }},
+      Category: { type: 'object', properties: { _id: { type: 'string' }, name: { type: 'string' }, slug: { type: 'string' }, imageKey: { type: 'string' } } },
+      Login: { type: 'object', required: ['email','password'], properties: { email: { type: 'string', format: 'email' }, password: { type: 'string', format: 'password' } } },
+      Register: { type: 'object', required: ['name','email','password'], properties: { name: { type: 'string' }, email: { type: 'string', format: 'email' }, password: { type: 'string', format: 'password' } } },
+      CartItem: { type: 'object', required: ['productId'], properties: { productId: { type: 'string' }, quantity: { type: 'integer', minimum: 1 } } },
+      Order: { type: 'object', properties: { _id: { type: 'string' }, status: { type: 'string' }, total: { type: 'number' }, items: { type: 'array', items: { type: 'object' } } } },
+    },
+  },
+  paths: {
+    '/api/health': { get: { tags: ['Health'], summary: 'Health check', responses: { 200: { description: 'API is healthy' } } } },
+    '/api/auth/register': { post: { tags: ['Auth'], summary: 'Register customer', requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Register' } } } }, responses: { 201: { description: 'Customer registered' }, 400: { description: 'Validation error' } } } },
+    '/api/auth/login': { post: { tags: ['Auth'], summary: 'Login', requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Login' } } } }, responses: { 200: { description: 'Login successful' }, 401: { description: 'Invalid credentials' } } } },
+    '/api/auth/me': { get: { tags: ['Auth'], summary: 'Current user', security: [{ bearerAuth: [] }, { cookieAuth: [] }], responses: { 200: { description: 'Authenticated user' }, 401: { description: 'Unauthorized' } } } },
+    '/api/auth/logout': { post: { tags: ['Auth'], summary: 'Logout', responses: { 200: { description: 'Logged out' } } } },
+    '/api/products': {
+      get: { tags: ['Products'], summary: 'List products', parameters: [
+        { name: 'q', in: 'query', schema: { type: 'string' } }, { name: 'category', in: 'query', schema: { type: 'string' } },
+        { name: 'bestSeller', in: 'query', schema: { type: 'boolean' } }, { name: 'featured', in: 'query', schema: { type: 'boolean' } },
+        { name: 'page', in: 'query', schema: { type: 'integer', default: 1 } }, { name: 'limit', in: 'query', schema: { type: 'integer', default: 24 } },
+      ], responses: { 200: { description: 'Product list' } } },
+      post: { tags: ['Products'], summary: 'Create product', security: [{ bearerAuth: [] }, { cookieAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Product' } } } }, responses: { 201: { description: 'Created' }, 401: { description: 'Unauthorized' }, 403: { description: 'Forbidden' } } },
+    },
+    '/api/products/{slug}': { get: { tags: ['Products'], summary: 'Get product by slug', parameters: [{ name: 'slug', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Product' }, 404: { description: 'Not found' } } } },
+    '/api/products/{id}': {
+      patch: { tags: ['Products'], summary: 'Update product', security: [{ bearerAuth: [] }, { cookieAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Product' } } } }, responses: { 200: { description: 'Updated' } } },
+      delete: { tags: ['Products'], summary: 'Deactivate product', security: [{ bearerAuth: [] }, { cookieAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Deactivated' } } },
+    },
+    '/api/categories': {
+      get: { tags: ['Categories'], summary: 'List categories', responses: { 200: { description: 'Categories', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Category' } } } } } } },
+      post: { tags: ['Categories'], summary: 'Create category', security: [{ bearerAuth: [] }, { cookieAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Category' } } } }, responses: { 201: { description: 'Created' } } },
+    },
+    '/api/categories/{id}': { patch: { tags: ['Categories'], summary: 'Update category', security: [{ bearerAuth: [] }, { cookieAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Category' } } } }, responses: { 200: { description: 'Updated' } } } },
+    '/api/cart': { get: { tags: ['Cart'], summary: 'Get current cart', security: [{ bearerAuth: [] }, { cookieAuth: [] }], responses: { 200: { description: 'Cart' } } } },
+    '/api/cart/items': { post: { tags: ['Cart'], summary: 'Add item to cart', security: [{ bearerAuth: [] }, { cookieAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/CartItem' } } } }, responses: { 200: { description: 'Cart updated' } } } },
+    '/api/cart/items/{productId}': {
+      patch: { tags: ['Cart'], summary: 'Update cart quantity', security: [{ bearerAuth: [] }, { cookieAuth: [] }], parameters: [{ name: 'productId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { quantity: { type: 'integer' } } } } } }, responses: { 200: { description: 'Cart updated' } } },
+      delete: { tags: ['Cart'], summary: 'Remove cart item', security: [{ bearerAuth: [] }, { cookieAuth: [] }], parameters: [{ name: 'productId', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Cart updated' } } },
+    },
+    '/api/orders': { post: { tags: ['Orders'], summary: 'Create order', security: [{ bearerAuth: [] }, { cookieAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } }, responses: { 201: { description: 'Order created' } } } },
+    '/api/orders/mine': { get: { tags: ['Orders'], summary: 'Current customer orders', security: [{ bearerAuth: [] }, { cookieAuth: [] }], responses: { 200: { description: 'Orders', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Order' } } } } } } } },
+    '/api/orders/admin/all': { get: { tags: ['Orders'], summary: 'List all orders', security: [{ bearerAuth: [] }, { cookieAuth: [] }], responses: { 200: { description: 'Orders' } } } },
+    '/api/orders/{id}/status': { patch: { tags: ['Orders'], summary: 'Update order status', security: [{ bearerAuth: [] }, { cookieAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string' } } } } } }, responses: { 200: { description: 'Updated' } } } },
+    '/api/admin/dashboard': { get: { tags: ['Admin'], summary: 'Dashboard statistics', security: [{ bearerAuth: [] }, { cookieAuth: [] }], responses: { 200: { description: 'Dashboard data' } } } },
+    '/api/admin/staff': { get: { tags: ['Admin'], summary: 'List staff', security: [{ bearerAuth: [] }, { cookieAuth: [] }], responses: { 200: { description: 'Staff' } } }, post: { tags: ['Admin'], summary: 'Create staff', security: [{ bearerAuth: [] }, { cookieAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Register' } } } }, responses: { 201: { description: 'Staff created' } } } },
+    '/api/customers': { get: { tags: ['Customers'], summary: 'List customers', security: [{ bearerAuth: [] }, { cookieAuth: [] }], responses: { 200: { description: 'Customers' } } } },
+    '/api/reviews/{productId}': { get: { tags: ['Reviews'], summary: 'List product reviews', parameters: [{ name: 'productId', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Reviews' } } }, post: { tags: ['Reviews'], summary: 'Create product review', security: [{ bearerAuth: [] }, { cookieAuth: [] }], parameters: [{ name: 'productId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } }, responses: { 201: { description: 'Review created' } } } },
+    '/api/coupons': { get: { tags: ['Coupons'], summary: 'List coupons', security: [{ bearerAuth: [] }, { cookieAuth: [] }], responses: { 200: { description: 'Coupons' } } }, post: { tags: ['Coupons'], summary: 'Create coupon', security: [{ bearerAuth: [] }, { cookieAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } }, responses: { 201: { description: 'Coupon created' } } } },
+    '/api/coupons/{id}': { patch: { tags: ['Coupons'], summary: 'Update coupon', security: [{ bearerAuth: [] }, { cookieAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } }, responses: { 200: { description: 'Updated' } } } },
+    '/api/newsletter/subscribe': { post: { tags: ['Newsletter'], summary: 'Subscribe email', requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['email'], properties: { email: { type: 'string', format: 'email' } } } } } }, responses: { 201: { description: 'Subscribed' } } } },
+    '/api/newsletter': { get: { tags: ['Newsletter'], summary: 'List subscribers', security: [{ bearerAuth: [] }, { cookieAuth: [] }], responses: { 200: { description: 'Subscribers' } } } },
+  },
+};

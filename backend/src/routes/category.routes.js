@@ -1,0 +1,1 @@
+import {Router} from 'express'; import {list,create,update} from '../controllers/category.controller.js'; import {protect,requireRoles} from '../middleware/auth.js'; const r=Router(); r.get('/',list); r.post('/',protect,requireRoles('admin','superadmin'),create); r.patch('/:id',protect,requireRoles('admin','superadmin'),update); export default r;
