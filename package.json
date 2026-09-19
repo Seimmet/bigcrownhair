@@ -4,7 +4,7 @@
   "description": "Bigcrown hair monorepo",
   "main": "index.js",
   "engines": {
-    "node": ">=20.00"
+    "node": ">=24.00"
   },
   "scripts": {
     "build": "npm install --prefix backend && npm install --prefix admin && npm run build --prefix admin",
